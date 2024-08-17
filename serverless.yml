@@ -1,0 +1,120 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: luismr00
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: serverless-demo
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}  # Default stage is 'dev'
+  region: ${opt:region, 'us-east-1'}  # Default region is 'us-east-1'
+  environment:
+    USERS_TABLE: usersTable3
+    PRODUCTS_TABLE: productsTable3
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+      Resource: "*"
+
+functions:
+
+  test:
+    handler: handler.hello
+    events:
+      - http:
+          path: test
+          method: any
+
+  auth:
+    handler: src/auth/authHandler.handler
+    events:
+      - http:
+          path: auth/{proxy+}
+          method: any
+
+  users:
+    handler: src/users/userHandler.handler
+    events:
+      - http:
+          path: users/{proxy+}
+          method: any
+
+  products:
+    handler: src/products/productHandler.handler
+    events:
+      - http:
+          path: products/{proxy+}
+          method: any
+
+# resources:
+#   Resources:
+#     usersTable3:
+#       Type: "AWS::DynamoDB::GlobalTable"
+#       Properties:
+#         TableName: "usersTable3"
+#         AttributeDefinitions:
+#           - AttributeName: "id"
+#             AttributeType: "S"
+#         KeySchema:
+#           - AttributeName: "id"
+#             KeyType: "HASH"
+#         BillingMode: PAY_PER_REQUEST
+#         StreamSpecification:
+#           StreamViewType: NEW_AND_OLD_IMAGES
+#         Replicas:
+#           - Region: us-east-1
+#           - Region: us-west-2
+#           - Region: eu-west-1
+#         # ProvisionedThroughput:
+#         #   ReadCapacityUnits: 5
+#         #   WriteCapacityUnits: 5
+
+#     productsTable3:
+#       Type: "AWS::DynamoDB::GlobalTable"
+#       Properties:
+#         TableName: "productsTable3"
+#         AttributeDefinitions:
+#           - AttributeName: "id"
+#             AttributeType: "S"
+#         KeySchema:
+#           - AttributeName: "id"
+#             KeyType: "HASH"
+#         BillingMode: PAY_PER_REQUEST
+#         StreamSpecification:
+#           StreamViewType: NEW_AND_OLD_IMAGES
+#         Replicas:
+#           - Region: us-east-1
+#           - Region: us-west-2
+#           - Region: eu-west-1
+#         # ProvisionedThroughput:
+#         #   ReadCapacityUnits: 5
+#         #   WriteCapacityUnits: 5
+
+package:
+  # Include all the source code and any other files needed for the service.
+  include:
+    - src/middleware/**
+    - src/db/**
+    - node_modules/**
+    - handler.js
+    - package-lock.json
+    - package.json
+
+  # Exclude unnecessary files to keep the deployment package size small.
+  exclude:
+    - test/**
+    - .git/**
+    - .vscode/**
+    - .env
+    - .serverless/**
+    - .gitignore
+    - README.md
+    - serverless.yml
